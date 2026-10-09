@@ -19,6 +19,7 @@ pub mod adjust_dialog;
 pub mod adjust_editors;
 pub mod adjust_preview;
 pub mod adjust_ui;
+mod alt_grab;
 pub mod analysis_ui;
 pub mod artboard_ui;
 pub(crate) mod blend_preview;
@@ -396,6 +397,10 @@ pub struct PhotocraftApp {
     fonts_ready: bool,
     /// Screen rect of the main canvas last frame (for overlays and the navigator).
     pub last_canvas_rect: egui::Rect,
+    /// Physical pixels per egui point of the canvas last frame (`ctx.pixels_per_point`). The
+    /// canvas maps document pixels to physical pixels, so point-space geometry divides the view
+    /// zoom by this (see [`Self::point_zoom`]).
+    pub ppp: f32,
     /// The document area showing the active document's canvas last frame (not the tabs, the
     /// start screen or an opening file's card): files dropped here are placed as layers.
     pub(crate) drop_canvas_rect: Option<egui::Rect>,
@@ -549,6 +554,7 @@ impl PhotocraftApp {
             last_window_title: String::new(),
             fonts_ready: false,
             last_canvas_rect: egui::Rect::from_min_size(egui::Pos2::ZERO, egui::vec2(800.0, 600.0)),
+            ppp: 1.0,
             drop_canvas_rect: None,
             tab_strip: None,
             drop_places: Default::default(),
@@ -932,10 +938,7 @@ impl PhotocraftApp {
             p => std::path::Path::new(p.as_deref().unwrap_or(&st.doc.name)).with_extension("psd").to_string_lossy().into_owned(),
         };
         let doc = st.doc.id;
-        self.pick_save(&suggested, move |app, path| {
-            app.refocus(doc)?;
-            app.save_to(path)
-        })
+        self.pick_save(&suggested, move |app, path| app.with_document(doc, |app| app.save_to(path)))
     }
 
     /// [`Self::save_as`] once the path is known.
@@ -960,8 +963,7 @@ impl PhotocraftApp {
         let write = self.services.write.as_mut().ok_or("no writer configured")?;
         write(&path, &bytes)?;
         if !copy && let Some(st) = self.session.active_mut() {
-            st.path = Some(path.clone());
-            st.saved_revision = st.revision;
+            st.saved_to(path.clone());
         }
         self.ui.status = format!("Saved {path}");
         // "Save Document" script events and File › Generate › Image Assets.
@@ -991,8 +993,7 @@ impl PhotocraftApp {
         let write = self.services.automation_write.as_mut().ok_or("automation write authority is not configured")?;
         write(&target, &bytes)?;
         if let Some(state) = self.session.active_mut() {
-            state.path = Some(target.clone());
-            state.saved_revision = state.revision;
+            state.saved_to(target.clone());
         }
         self.ui.status = format!("Saved {target}");
         self.ui.status_error = false;
@@ -1478,9 +1479,22 @@ impl PhotocraftApp {
 }
 
 impl PhotocraftApp {
-    /// Zoom of the active document's main view (screen points per document pixel).
+    /// Zoom of the active document's main view: screen (device) pixels per document pixel, the
+    /// user-facing factor (`100%` is `1.0`).
     pub fn current_zoom(&self) -> f32 {
         self.session.active_index().and_then(|i| self.ui.views.get(i)).map_or(1.0, |v| v.zoom)
+    }
+
+    /// Screen (device) pixels per egui point of the canvas (`ctx.pixels_per_point`), as of the
+    /// last canvas frame. `1.0` before the first frame.
+    pub fn canvas_ppp(&self) -> f32 {
+        if self.ppp.is_finite() && self.ppp > 0.0 { self.ppp } else { 1.0 }
+    }
+
+    /// The active view's zoom in egui points per document pixel: the unit every screen-space
+    /// distance, tolerance and texture-level choice on the canvas is measured in.
+    pub fn point_zoom(&self) -> f32 {
+        self.current_zoom() / self.canvas_ppp()
     }
 }
 
@@ -1602,27 +1616,6 @@ fn channel_tint(mode: photocraft_doc::ColorMode, k: usize, byte: u8, in_color: b
     }
 }
 
-#[cfg(test)]
-mod channel_tint_tests {
-    use super::channel_tint;
-    use egui::Color32;
-    use photocraft_doc::ColorMode::{Cmyk, Grayscale, Rgb};
-
-    #[test]
-    fn channels_in_color_tint_rgb_from_black_and_cmyk_inks_from_white() {
-        assert_eq!(channel_tint(Rgb, 0, 255, true), Color32::from_rgb(255, 0, 0));
-        assert_eq!(channel_tint(Rgb, 2, 0, true), Color32::BLACK);
-        // CMYK: no ink is white, full ink is the ink's colour.
-        assert_eq!(channel_tint(Cmyk, 0, 255, true), Color32::WHITE);
-        assert_eq!(channel_tint(Cmyk, 0, 0, true), Color32::from_rgb(0, 255, 255));
-        assert_eq!(channel_tint(Cmyk, 1, 0, true), Color32::from_rgb(255, 0, 255));
-        assert_eq!(channel_tint(Cmyk, 2, 0, true), Color32::from_rgb(255, 255, 0));
-        assert_eq!(channel_tint(Cmyk, 3, 0, true), Color32::BLACK);
-        assert_eq!(channel_tint(Grayscale, 0, 77, true), Color32::from_gray(77));
-        assert_eq!(channel_tint(Rgb, 0, 77, false), Color32::from_gray(77));
-    }
-}
-
 impl PhotocraftApp {
     /// Mirror the session clipboard onto the OS clipboard (RGBA8).
     fn export_os_clipboard(&mut self) {
@@ -1701,6 +1694,9 @@ mod pencil_tests;
 mod transform_undo_tests;
 
 #[cfg(test)]
+mod save_identity_tests;
+
+#[cfg(test)]
 mod move_auto_select_tests;
 
 #[cfg(test)]
@@ -1713,10 +1709,16 @@ mod hidden_layer_tests;
 mod blend_dropdown_keys_tests;
 
 #[cfg(test)]
+mod blend_dropdown_wheel_tests;
+
+#[cfg(test)]
 mod marquee_tests;
 
 #[cfg(test)]
 mod stamp_tests;
+
+#[cfg(test)]
+mod alt_click_tests;
 
 #[cfg(test)]
 mod polygon_lasso_tests;
@@ -1902,5 +1904,26 @@ mod clipboard_tests {
         let mask = st.doc.layer(st.active_layer.unwrap()).unwrap().mask.as_ref().unwrap();
         assert!((mask.value(32, 32) - 128.0 / 255.0).abs() < 2.0 / 255.0, "the grey, centred in the view: {}", mask.value(32, 32));
         assert_eq!(mask.value(0, 0), 0.0, "the rest of the mask is unchanged");
+    }
+}
+
+#[cfg(test)]
+mod channel_tint_tests {
+    use super::channel_tint;
+    use egui::Color32;
+    use photocraft_doc::ColorMode::{Cmyk, Grayscale, Rgb};
+
+    #[test]
+    fn channels_in_color_tint_rgb_from_black_and_cmyk_inks_from_white() {
+        assert_eq!(channel_tint(Rgb, 0, 255, true), Color32::from_rgb(255, 0, 0));
+        assert_eq!(channel_tint(Rgb, 2, 0, true), Color32::BLACK);
+        // CMYK: no ink is white, full ink is the ink's colour.
+        assert_eq!(channel_tint(Cmyk, 0, 255, true), Color32::WHITE);
+        assert_eq!(channel_tint(Cmyk, 0, 0, true), Color32::from_rgb(0, 255, 255));
+        assert_eq!(channel_tint(Cmyk, 1, 0, true), Color32::from_rgb(255, 0, 255));
+        assert_eq!(channel_tint(Cmyk, 2, 0, true), Color32::from_rgb(255, 255, 0));
+        assert_eq!(channel_tint(Cmyk, 3, 0, true), Color32::BLACK);
+        assert_eq!(channel_tint(Grayscale, 0, 77, true), Color32::from_gray(77));
+        assert_eq!(channel_tint(Rgb, 0, 77, false), Color32::from_gray(77));
     }
 }
