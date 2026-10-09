@@ -24,6 +24,8 @@
 	Layer	Calque
 	Type	Texte
 	Select	Sélection
+	Selected	Sélectionnés
+	Scope	Portée
 	Top Left	En haut à gauche
 	Top Right	En haut à droite
 	Bottom Left	En bas à gauche
@@ -1376,6 +1378,7 @@
 	Stroke	Contour
 	Stroke Catch-up	Rattrapage du trait
 	Stroke:	Contour :
+	Location:	Emplacement :
 	Style	Style
 	Style Options	Options de style
 	Style Options…	Options de style…
@@ -2357,7 +2360,7 @@
 	Pixel	Pixel
 	Adjustment	Ajustement
 	Drag (lasso) or click points (polygonal) · {add} add · {sub} subtract	Faites glisser (lasso) ou cliquez des points (polygonal) · {add} ajouter · {sub} soustraire
-	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · {commit} commits · Esc cancels	Tracez un cadre de recadrage · faites glisser à l'intérieur pour le déplacer · les bords le redimensionnent ({ratio} proportions, {centre} centre) · Espace le déplace pendant le tracé · {commit} valide · Échap annule
+	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · arrows nudge · X swaps orientation · {commit} commits · Esc cancels	Tracez un cadre de recadrage · faites glisser à l'intérieur pour le déplacer · les bords le redimensionnent ({ratio} proportions, {centre} centre) · Espace le déplace pendant le tracé · flèches le décalent · X permute l'orientation · {commit} valide · Échap annule
 	{mode} Color · {bits} bit	Couleurs {mode} · {bits} bits
 	Drag to move the layer	Faites glisser pour déplacer le calque
 	Scrubby Zoom	Zoom par glissement
@@ -2673,6 +2676,11 @@ fontWeight	Italic	Italique
 	Reset View	Réinitialiser la vue
 	Drag around the centre to rotate the view  ·  Shift constrains to 15°	Faites glisser autour du centre pour tourner la vue  ·  Maj contraint à 15°
 
+# Painting symmetry presets.
+	Dual Axis	Deux axes
+	Diagonal	Diagonale
+	Transform Symmetry	Transformer la symétrie
+
 # Eyedropper Sample Size and Sample (#1649).
 	Point Sample	Échantillon ponctuel
 	3 by 3 Average	Moyenne 3 × 3
@@ -2692,3 +2700,13 @@ fontWeight	Italic	Italique
 	Color to Alpha…	Couleur vers alpha…
 	Transparency Threshold	Seuil de transparence
 	Opacity Threshold	Seuil d'opacité
+	Rule of Thirds	Règle des tiers
+	Triangle	Triangle
+	Golden Ratio	Nombre d’or
+	Golden Spiral	Spirale d’or
+	Auto Show Overlay	Afficher automatiquement la superposition
+	Always Show Overlay	Toujours afficher la superposition
+	Never Show Overlay	Ne jamais afficher la superposition
+	Cycle Overlay	Changer de superposition
+	Cycle Orientation	Changer d’orientation
+	Set the overlay options for the Crop tool	Définir les options de superposition de l’outil Recadrage

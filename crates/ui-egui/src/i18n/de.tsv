@@ -21,6 +21,8 @@
 	Layer	Ebene
 	Type	Text
 	Select	Auswahl
+	Selected	Ausgewählt
+	Scope	Umfang
 	Top Left	Oben links
 	Top Right	Oben rechts
 	Bottom Left	Unten links
@@ -1391,6 +1393,8 @@
 	Stroke	Kontur
 	Stroke Catch-up	Strich nachführen
 	Stroke:	Kontur:
+	Location	Position
+	Location:	Position:
 	Style	Stil
 	Style Options	Stiloptionen
 	Style Options…	Stiloptionen…
@@ -2076,7 +2080,7 @@
 	Pixel	Pixel
 	Adjustment	Anpassung
 	Drag (lasso) or click points (polygonal) · {add} add · {sub} subtract	Ziehen (Lasso) oder Punkte klicken (polygonal) · {add} hinzufügen · {sub} abziehen
-	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · {commit} commits · Esc cancels	Freistellrahmen ziehen · innen ziehen verschiebt · Kanten skalieren ({ratio} Verhältnis, {centre} zentriert) · Leertaste verschiebt beim Zeichnen · {commit} übernimmt · Esc bricht ab
+	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · arrows nudge · X swaps orientation · {commit} commits · Esc cancels	Freistellrahmen ziehen · innen ziehen verschiebt · Kanten skalieren ({ratio} Verhältnis, {centre} zentriert) · Leertaste verschiebt beim Zeichnen · Pfeiltasten verschieben · X tauscht Ausrichtung · {commit} übernimmt · Esc bricht ab
 	{mode} Color · {bits} bit	{mode}-Farbe · {bits} Bit
 	Scrubby Zoom	Schleppzoom
 	Auto Erase	Automatisch löschen
@@ -2289,6 +2293,11 @@ fontWeight	Italic	Kursiv
 	Reset View	Ansicht zurücksetzen
 	Drag around the centre to rotate the view  ·  Shift constrains to 15°	Ansicht drehen: im Bogen ziehen · Umschalt: 15°-Schritte
 
+# Painting symmetry presets.
+	Dual Axis	Duale Achse
+	Diagonal	Diagonal
+	Transform Symmetry	Symmetrie transformieren
+
 # Eyedropper Sample Size and Sample (#1649).
 	Point Sample	1 Pixel
 	3 by 3 Average	3 x 3 Pixel Durchschnitt
@@ -2308,3 +2317,13 @@ fontWeight	Italic	Kursiv
 	Color to Alpha…	Farbe zu Alpha…
 	Transparency Threshold	Transparenz-Schwellenwert
 	Opacity Threshold	Deckkraft-Schwellenwert
+	Rule of Thirds	Drittel-Regel
+	Triangle	Dreieck
+	Golden Ratio	Goldener Schnitt
+	Golden Spiral	Goldene Spirale
+	Auto Show Overlay	Überlagerung automatisch anzeigen
+	Always Show Overlay	Überlagerung immer anzeigen
+	Never Show Overlay	Überlagerung nie anzeigen
+	Cycle Overlay	Überlagerung wechseln
+	Cycle Orientation	Ausrichtung wechseln
+	Set the overlay options for the Crop tool	Überlagerungsoptionen für das Freistellungswerkzeug festlegen

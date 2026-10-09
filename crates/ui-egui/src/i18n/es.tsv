@@ -17,6 +17,8 @@
 	Layer	Capa
 	Type	Texto
 	Select	Selección
+	Selected	Seleccionadas
+	Scope	Alcance
 	Top Left	Superior izquierda
 	Top Right	Superior derecha
 	Bottom Left	Inferior izquierda
@@ -1392,6 +1394,8 @@
 	Stroke	Trazo
 	Stroke Catch-up	Poner al día del trazo
 	Stroke:	Trazo:
+	Location	Ubicación
+	Location:	Ubicación:
 	Style	Estilo
 	Style Options	Opciones de estilo
 	Style Options…	Opciones de estilo…
@@ -2094,7 +2098,7 @@
 	Pixel	Píxel
 	Adjustment	Ajuste
 	Drag (lasso) or click points (polygonal) · {add} add · {sub} subtract	Arrastre (lazo) o haga clic en los puntos (poligonal) · {add} añadir · {sub} restar
-	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · {commit} commits · Esc cancels	Arrastre un marco de recorte · arrastre dentro para mover · los bordes cambian el tamaño ({ratio} proporción, {centre} centro) · Espacio mueve mientras dibuja · {commit} aplica · Esc cancela
+	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · arrows nudge · X swaps orientation · {commit} commits · Esc cancels	Arrastre un marco de recorte · arrastre dentro para mover · los bordes cambian el tamaño ({ratio} proporción, {centre} centro) · Espacio mueve mientras dibuja · flechas desplazan · X cambia orientación · {commit} aplica · Esc cancela
 	{mode} Color · {bits} bit	Color {mode} · {bits} bits
 	Scrubby Zoom	Zoom por arrastre
 	Auto Erase	Borrado automático
@@ -2319,6 +2323,11 @@ fontWeight	Italic	Cursiva
 	Reset View	Restablecer vista
 	Drag around the centre to rotate the view  ·  Shift constrains to 15°	Arrastre alrededor del centro para rotar la vista  ·  Mayús fija a 15°
 
+# Painting symmetry presets.
+	Dual Axis	Doble eje
+	Diagonal	Diagonal
+	Transform Symmetry	Transformar simetría
+
 # Eyedropper Sample Size and Sample (#1649).
 	Point Sample	Muestra puntual
 	3 by 3 Average	Promedio de 3 × 3
@@ -2338,3 +2347,13 @@ fontWeight	Italic	Cursiva
 	Color to Alpha…	Color a alfa…
 	Transparency Threshold	Umbral de transparencia
 	Opacity Threshold	Umbral de opacidad
+	Rule of Thirds	Regla de los tercios
+	Triangle	Triángulo
+	Golden Ratio	Proporción áurea
+	Golden Spiral	Espiral áurea
+	Auto Show Overlay	Mostrar superposición automáticamente
+	Always Show Overlay	Mostrar siempre la superposición
+	Never Show Overlay	No mostrar nunca la superposición
+	Cycle Overlay	Alternar superposición
+	Cycle Orientation	Alternar orientación
+	Set the overlay options for the Crop tool	Definir las opciones de superposición de la herramienta Recortar

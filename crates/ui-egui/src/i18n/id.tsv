@@ -17,6 +17,8 @@
 	Layer	Layer
 	Type	Teks
 	Select	Seleksi
+	Selected	Terpilih
+	Scope	Cakupan
 	Top Left	Kiri atas
 	Top Right	Kanan atas
 	Bottom Left	Kiri bawah
@@ -1370,6 +1372,7 @@
 	Stroke	Stroke
 	Stroke Catch-up	Stroke Catch-up
 	Stroke:	Stroke:
+	Location:	Lokasi:
 	Style	Gaya
 	Style Options	Opsi Gaya
 	Style Options…	Opsi Gaya…
@@ -2348,7 +2351,7 @@
 	Pixel	Piksel
 	Adjustment	Penyesuaian
 	Drag (lasso) or click points (polygonal) · {add} add · {sub} subtract	Seret (lasso) atau klik titik (polygonal) · {add} tambah · {sub} kurangi
-	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · {commit} commits · Esc cancels	Seret kotak crop · seret di dalam untuk memindah · tepi mengubah ukuran (rasio {ratio}, tengah {centre}) · Space memindah saat menggambar · {commit} menerapkan · Esc batal
+	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · arrows nudge · X swaps orientation · {commit} commits · Esc cancels	Seret kotak crop · seret di dalam untuk memindah · tepi mengubah ukuran (rasio {ratio}, tengah {centre}) · Space memindah saat menggambar · panah menggeser · X menukar orientasi · {commit} menerapkan · Esc batal
 	{mode} Color · {bits} bit	Warna {mode} · {bits} bit
 	Drag to move the layer	Seret untuk memindah layer
 	Scrubby Zoom	Zoom Scrubby
@@ -2660,6 +2663,11 @@ fontWeight	Italic	Miring
 	Reset View	Atur Ulang Tampilan
 	Drag around the centre to rotate the view  ·  Shift constrains to 15°	Seret di sekitar pusat untuk memutar tampilan  ·  Shift membatasi ke 15°
 
+# Painting symmetry presets.
+	Dual Axis	Sumbu Ganda
+	Diagonal	Diagonal
+	Transform Symmetry	Transformasi Simetri
+
 # Eyedropper Sample Size and Sample (#1649).
 	Point Sample	Sampel Titik
 	3 by 3 Average	Rata-rata 3 × 3
@@ -2679,3 +2687,13 @@ fontWeight	Italic	Miring
 	Color to Alpha…	Warna ke Alpha…
 	Transparency Threshold	Ambang transparansi
 	Opacity Threshold	Ambang opasitas
+	Rule of Thirds	Aturan Sepertiga
+	Triangle	Segitiga
+	Golden Ratio	Rasio Emas
+	Golden Spiral	Spiral Emas
+	Auto Show Overlay	Tampilkan Overlay Otomatis
+	Always Show Overlay	Selalu Tampilkan Overlay
+	Never Show Overlay	Jangan Tampilkan Overlay
+	Cycle Overlay	Ganti Overlay
+	Cycle Orientation	Ganti Orientasi
+	Set the overlay options for the Crop tool	Atur opsi overlay untuk alat Crop

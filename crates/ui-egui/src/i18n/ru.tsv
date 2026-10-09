@@ -24,6 +24,8 @@
 	Layer	Слой
 	Type	Текст
 	Select	Выделение
+	Selected	Выбранные
+	Scope	Область
 	Top Left	Верхний левый
 	Top Right	Верхний правый
 	Bottom Left	Нижний левый
@@ -1529,7 +1531,7 @@
 	Click to fill similar colours	Щёлкните, чтобы залить похожие цвета
 	Click to add text	Щёлкните, чтобы добавить текст
 	Drag (lasso) or click points (polygonal) · {add} add · {sub} subtract	Перетащите (лассо) или щёлкайте точки (многоугольное) · {add} добавить · {sub} вычесть
-	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · {commit} commits · Esc cancels	Выделите рамку кадрирования · перетащите внутри для перемещения · края меняют размер ({ratio} пропорции, {centre} центр) · Space двигает при рисовании · {commit} применить · Esc отмена
+	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · arrows nudge · X swaps orientation · {commit} commits · Esc cancels	Выделите рамку кадрирования · перетащите внутри для перемещения · края меняют размер ({ratio} пропорции, {centre} центр) · Space двигает при рисовании · стрелки сдвигают · X меняет ориентацию · {commit} применить · Esc отмена
 	{mode} Color · {bits} bit	{mode}, {bits} бит
 	Drag to move the layer	Перетащите, чтобы переместить слой
 	Fit Screen	По размеру экрана
@@ -2093,6 +2095,9 @@
 	Stroke	Мазок
 	Stroke Catch-up	Догонять мазком
 	Stroke:	Обводка:
+	Location:	Расположение:
+	Inside	Внутри
+	Outside	Снаружи
 	Tetrahedral	Тетраэдрическая
 	Texture Each Tip	Текстура на каждый отпечаток
 	The current gradient (pick one in Window › Gradients)	Текущий градиент (выберите в Окно › Градиенты)
@@ -2521,6 +2526,12 @@ fontWeight	Italic	Курсив
 	Reset View	Сбросить вид
 	Drag around the centre to rotate the view  ·  Shift constrains to 15°	Перетащите вокруг центра, чтобы повернуть вид  ·  Shift фиксирует шаг 15°
 
+# Painting symmetry presets.
+	Dual Axis	Две оси
+	Diagonal	Диагональная
+	Transform Symmetry	Трансформировать симметрию
+	Set painting symmetry options	Настроить параметры симметричного рисования
+
 # Eyedropper Sample Size and Sample (#1649).
 	Point Sample	Точечная выборка
 	3 by 3 Average	Среднее 3 × 3
@@ -2541,3 +2552,13 @@ fontWeight	Italic	Курсив
 	Color to Alpha…	Цвет в альфа-канал…
 	Transparency Threshold	Порог прозрачности
 	Opacity Threshold	Порог непрозрачности
+	Rule of Thirds	Правило третей
+	Triangle	Треугольник
+	Golden Ratio	Золотое сечение
+	Golden Spiral	Золотая спираль
+	Auto Show Overlay	Показывать перекрытие автоматически
+	Always Show Overlay	Всегда показывать перекрытие
+	Never Show Overlay	Никогда не показывать перекрытие
+	Cycle Overlay	Сменить перекрытие
+	Cycle Orientation	Сменить ориентацию
+	Set the overlay options for the Crop tool	Задать параметры перекрытия для инструмента «Рамка»

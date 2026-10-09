@@ -340,10 +340,11 @@ fn build() -> Vec<CommandSpec> {
             "New…",
             ["File"],
             Some("Cmd+N"),
-            r##"{"width":u32=1920,"height":u32=1080,"mode":"rgb|gray|cmyk|lab"="rgb","depth":8|16|32=8,"background":"white|black|backgroundColor|transparent|#rrggbb"="white","backgroundColor":[r,g,b]? (0..1; defaults to toolbox colour),"resolution":ppi=72,"name":str}"##,
+            r##"{"width":1..300000=1920,"height":1..300000=1080 (pixel counts are rounded),"mode":"rgb|gray|grayscale|cmyk|lab"="rgb","depth":8|16|32=8,"background":"white|black|backgroundColor|transparent|#rrggbb"="white","backgroundColor":[r,g,b]? (0..1; defaults to toolbox colour),"resolution":1..30000=72 (ppi),"name":str}"##,
             always,
             |s, p| {
                 use crate::document_preset_cmds::{MAX_DIMENSION, MAX_RESOLUTION, background_color, color_mode, sample_type};
+                crate::document_preset_cmds::validate_new_params(s, p)?;
                 // A size given as a float (`512.0`, as JSON from a UI field) is still that size (#254).
                 let px = |k: &str, d: u32| match p.get(k) {
                     Some(v) => v
@@ -746,7 +747,8 @@ fn build() -> Vec<CommandSpec> {
             |s, p| {
                 let c = color_param(p, "color", s.tools.foreground);
                 let id = s.edit("New Color Fill Layer", |doc, active| {
-                    let mut l = Layer::new(doc.next_layer_name("Color Fill"), LayerContent::Fill(Fill::Solid(Color::rgba(c[0], c[1], c[2], c[3]))));
+                    let fill = Fill::Solid(Color::rgba(c[0], c[1], c[2], c[3])).in_mode(doc.mode);
+                    let mut l = Layer::new(doc.next_layer_name("Color Fill"), LayerContent::Fill(fill));
                     mask_new_layer(doc, &mut l, p, "layer.newFillLayer.solidColor")?;
                     let id = doc.insert_above(*active, l);
                     *active = Some(id);
@@ -775,7 +777,8 @@ fn build() -> Vec<CommandSpec> {
                         1.0,
                         style,
                         reverse,
-                    );
+                    )
+                    .in_mode(doc.mode);
                     let mut l = Layer::new(doc.next_layer_name("Gradient Fill"), LayerContent::Fill(fill));
                     mask_new_layer(doc, &mut l, p, "layer.newFillLayer.gradient")?;
                     let id = doc.insert_above(*active, l);

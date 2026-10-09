@@ -45,7 +45,9 @@ pub mod color_range_ui;
 pub mod comps_ui;
 pub mod control;
 pub mod credits;
+pub mod crop_overlay;
 pub mod crop_ui;
+pub mod dialog_blend_ui;
 pub mod dialogs;
 pub mod direct_select;
 pub mod discard_ui;
@@ -119,6 +121,7 @@ pub mod rotate_view;
 pub mod rulers;
 pub mod screen_picker;
 pub mod scrollbars;
+pub mod served_fonts;
 pub mod shortcut_dispatch;
 pub mod shortcuts;
 mod sizing;
@@ -128,8 +131,10 @@ pub mod snap_ui;
 pub mod state;
 pub mod stroke_constraint;
 pub mod stroke_trail;
+pub mod stroke_ui;
 pub mod stylus;
 pub mod swatches_ui;
+pub mod symmetry_ui;
 mod tab_strip;
 pub mod theme;
 pub mod tiff_options_ui;
@@ -472,7 +477,7 @@ pub struct PhotocraftApp {
     pub(crate) type_layout: Option<((u64, u64, u64), std::sync::Arc<photocraft_text::TextLayout>)>,
     pub(crate) type_transform_preview: Option<type_transform::Preview>,
     /// Channel thumbnails for one document snapshot; view-only revisions reuse their pixels.
-    channel_thumbs: Option<(DocId, std::sync::Weak<Document>, Vec<egui::TextureHandle>)>,
+    channel_thumbs: Option<(DocId, std::sync::Weak<Document>, bool, Vec<egui::TextureHandle>)>,
     /// Channels panel overlays / channel views drawn over the canvas, per document id.
     pub(crate) channel_views: HashMap<u64, channel_view::Cache>,
     /// Selection outline keyed by (document, mask identity × step × visible region).
@@ -679,6 +684,9 @@ impl PhotocraftApp {
     }
 
     fn run_command(&mut self, id: &str, params: Value) -> Result<Value, String> {
+        if matches!(id, "paint.setSymmetry" | "paint.symmetryFromPath" | "paint.symmetryDisable") {
+            self.ui.symmetry_transform = None;
+        }
         let clip_read = std::mem::take(&mut self.clip_read_for_paste);
         if self.automation_input
             && let Some(authorize) = self.services.automation_command.as_ref()
@@ -755,6 +763,7 @@ impl PhotocraftApp {
     pub fn sync_views(&mut self) {
         type_transform::cancel_stale(self);
         crate::lasso_ui::cancel_stale(self);
+        crate::crop_ui::cancel_stale(self);
         let ids: Vec<DocId> = self.session.documents().iter().map(|d| d.doc.id).collect();
         // Where the document of view `i` is now. Views not tracked yet keep their index.
         let now = |i: usize| match self.view_docs.get(i) {
@@ -1487,7 +1496,8 @@ impl PhotocraftApp {
         // View-only commands bump revision without changing pixels. Keeping a Weak pins allocation
         // identity against address reuse without retaining the document's pixel data.
         let snapshot = std::sync::Arc::downgrade(&doc);
-        if !matches!(&self.channel_thumbs, Some((d, old, _)) if *d == id && old.ptr_eq(&snapshot)) {
+        let show_color = self.session.prefs().interface.show_channels_in_color;
+        if !matches!(&self.channel_thumbs, Some((d, old, in_color, _)) if *d == id && old.ptr_eq(&snapshot) && *in_color == show_color) {
             let comp = photocraft_compose::thumbnail(&doc, 56);
             let (w, h) = (comp.width as usize, comp.height as usize);
             let side = w.max(h);
@@ -1513,7 +1523,8 @@ impl PhotocraftApp {
                             let rgba = [p[0], p[1], p[2], 255].map(|v| f32::from(v) / 255.0);
                             let x = photocraft_raster::from_rgba(&fmt, rgba)[k];
                             let g = if cmyk { 1.0 - x } else { x };
-                            egui::Color32::from_gray((g.clamp(0.0, 1.0) * 255.0 + 0.5) as u8)
+                            let byte = (g.clamp(0.0, 1.0) * 255.0 + 0.5) as u8;
+                            channel_tint(fmt.mode, k, byte, show_color)
                         },
                         &format!("c{k}"),
                     ));
@@ -1534,10 +1545,34 @@ impl PhotocraftApp {
                 }
                 texs.push(ctx.load_texture(format!("chan-a{i}"), egui::ColorImage::new([side, side], px), egui::TextureOptions::LINEAR));
             }
-            self.channel_thumbs = Some((id, snapshot, texs));
+            self.channel_thumbs = Some((id, snapshot, show_color, texs));
         }
-        self.channel_thumbs.as_ref().map(|(_, _, t)| t.iter().map(|t| t.id()).collect()).unwrap_or_default()
+        self.channel_thumbs.as_ref().map(|(_, _, _, t)| t.iter().map(|t| t.id()).collect()).unwrap_or_default()
     }
+}
+
+/// The New Document dialog's key in the preferences' `dialogs` map.
+const NEW_DOCUMENT: &str = "file.new";
+
+/// New Document fields its OK remembers (#1810): the size, resolution, mode, depth, background and
+/// display units. Not the name, the preset or the clipboard size.
+const NEW_DOCUMENT_REMEMBERED: [&str; 8] = ["width", "height", "resolution", "mode", "depth", "background", "__unit", "__resUnit"];
+
+/// A remembered value the dialog can show (a corrupt preference is ignored).
+fn remembered_new_document_value(key: &str, v: &serde_json::Value) -> bool {
+    match key {
+        "width" | "height" => v.as_u64().is_some_and(|n| (1..=300_000).contains(&n)),
+        "resolution" => v.as_f64().is_some_and(|r| r.is_finite() && r > 0.0 && r <= 30_000.0),
+        "depth" => v.as_u64().is_some_and(|d| matches!(d, 1 | 8 | 16 | 32)),
+        _ => v.as_str().is_some_and(|s| !s.is_empty() && s.len() <= 64),
+    }
+}
+
+/// Remember the New Document fields `f` its OK used, for the next New Document.
+pub(crate) fn remember_new_document(app: &mut PhotocraftApp, f: &serde_json::Map<String, serde_json::Value>) {
+    let kept: serde_json::Map<String, serde_json::Value> =
+        NEW_DOCUMENT_REMEMBERED.iter().filter_map(|k| f.get(*k).filter(|v| remembered_new_document_value(k, v)).map(|v| (k.to_string(), v.clone()))).collect();
+    app.session.prefs.edit(|p| p.dialogs.insert(NEW_DOCUMENT.into(), serde_json::Value::Object(kept)));
 }
 
 fn clip_signature(w: u32, h: u32, px: &[u8]) -> u64 {
@@ -1548,9 +1583,52 @@ fn clip_signature(w: u32, h: u32, px: &[u8]) -> u64 {
     sig
 }
 
+/// A channel thumbnail pixel whose lightness is `byte` (255 = white: full light, no ink).
+/// Preferences ▸ Interface ▸ Show Channels in Color tints RGB channels from black to their
+/// primary and CMYK channels from white to their ink, as Photoshop does; otherwise grey.
+fn channel_tint(mode: photocraft_doc::ColorMode, k: usize, byte: u8, in_color: bool) -> egui::Color32 {
+    use photocraft_doc::ColorMode::{Cmyk, Rgb};
+    if !in_color {
+        return egui::Color32::from_gray(byte);
+    }
+    match (mode, k) {
+        (Rgb, 0) => egui::Color32::from_rgb(byte, 0, 0),
+        (Rgb, 1) => egui::Color32::from_rgb(0, byte, 0),
+        (Rgb, 2) => egui::Color32::from_rgb(0, 0, byte),
+        (Cmyk, 0) => egui::Color32::from_rgb(byte, 255, 255),
+        (Cmyk, 1) => egui::Color32::from_rgb(255, byte, 255),
+        (Cmyk, 2) => egui::Color32::from_rgb(255, 255, byte),
+        _ => egui::Color32::from_gray(byte),
+    }
+}
+
+#[cfg(test)]
+mod channel_tint_tests {
+    use super::channel_tint;
+    use egui::Color32;
+    use photocraft_doc::ColorMode::{Cmyk, Grayscale, Rgb};
+
+    #[test]
+    fn channels_in_color_tint_rgb_from_black_and_cmyk_inks_from_white() {
+        assert_eq!(channel_tint(Rgb, 0, 255, true), Color32::from_rgb(255, 0, 0));
+        assert_eq!(channel_tint(Rgb, 2, 0, true), Color32::BLACK);
+        // CMYK: no ink is white, full ink is the ink's colour.
+        assert_eq!(channel_tint(Cmyk, 0, 255, true), Color32::WHITE);
+        assert_eq!(channel_tint(Cmyk, 0, 0, true), Color32::from_rgb(0, 255, 255));
+        assert_eq!(channel_tint(Cmyk, 1, 0, true), Color32::from_rgb(255, 0, 255));
+        assert_eq!(channel_tint(Cmyk, 2, 0, true), Color32::from_rgb(255, 255, 0));
+        assert_eq!(channel_tint(Cmyk, 3, 0, true), Color32::BLACK);
+        assert_eq!(channel_tint(Grayscale, 0, 77, true), Color32::from_gray(77));
+        assert_eq!(channel_tint(Rgb, 0, 77, false), Color32::from_gray(77));
+    }
+}
+
 impl PhotocraftApp {
     /// Mirror the session clipboard onto the OS clipboard (RGBA8).
     fn export_os_clipboard(&mut self) {
+        if !self.session.prefs().general.export_clipboard {
+            return;
+        }
         let (Some(set), Some(clip)) = (self.services.clipboard_set_image.as_mut(), self.session.clipboard.as_ref()) else { return };
         let b = clip.bounds;
         if b.is_empty() {
@@ -1564,11 +1642,19 @@ impl PhotocraftApp {
         }
     }
 
-    /// File › New's fields: the defaults, plus the Clipboard preset (the clipboard image's size,
-    /// selected) when the clipboard holds an image. Opening the dialog is an explicit request, so
-    /// the OS clipboard is read here, as for a paste.
+    /// File › New's fields: the defaults, then the settings of the last document made with the
+    /// dialog (Photoshop starts from them, #1810), then the Clipboard preset (the clipboard image's
+    /// size, selected) when the clipboard holds an image. Opening the dialog is an explicit
+    /// request, so the OS clipboard is read here, as for a paste.
     pub(crate) fn new_document_fields(&mut self) -> serde_json::Map<String, serde_json::Value> {
         let mut f = crate::state::UiState::new_document_fields();
+        if let Some(serde_json::Value::Object(saved)) = self.session.prefs().dialogs.get(NEW_DOCUMENT) {
+            for k in NEW_DOCUMENT_REMEMBERED {
+                if let Some(v) = saved.get(k).filter(|v| remembered_new_document_value(k, v)) {
+                    f.insert(k.into(), v.clone());
+                }
+            }
+        }
         self.import_os_clipboard();
         if let Some(c) = self.session.clipboard.as_ref().filter(|c| !c.bounds.is_empty()) {
             crate::new_doc_ui::set_clipboard(&mut f, c.bounds.width(), c.bounds.height());
@@ -1578,13 +1664,19 @@ impl PhotocraftApp {
 
     /// If the OS clipboard holds an image that isn't the one we put there, make it the session
     /// clipboard (so ⌘V pastes screenshots and images copied in other apps, like Photoshop).
-    /// Returns true when a new external image was imported.
+    /// Returns true when a new external image was imported. Once the OS clipboard no longer holds
+    /// the image we mirrored or imported (text or a file was copied since), that image is stale:
+    /// it is dropped rather than pasted.
     pub(crate) fn import_os_clipboard(&mut self) -> bool {
         let Some(get) = self.services.clipboard_get_image.as_mut() else { return false };
-        let Some((w, h, bytes)) = get() else { return false };
-        if w == 0 || h == 0 || bytes.len() != w as usize * h as usize * 4 {
+        let image = get().filter(|(w, h, bytes)| *w > 0 && *h > 0 && bytes.len() == *w as usize * *h as usize * 4);
+        let Some((w, h, bytes)) = image else {
+            if self.os_clip_sig.take().is_some() {
+                self.session.clipboard = None;
+                self.clip_external = false;
+            }
             return false;
-        }
+        };
         let sig = clip_signature(w, h, &bytes);
         if self.os_clip_sig == Some(sig) && self.session.clipboard.is_some() {
             return false;
@@ -1610,6 +1702,9 @@ mod transform_undo_tests;
 
 #[cfg(test)]
 mod move_auto_select_tests;
+
+#[cfg(test)]
+mod new_doc_remember_tests;
 
 #[cfg(test)]
 mod hidden_layer_tests;
@@ -1652,12 +1747,38 @@ mod clipboard_tests {
         assert_eq!((w, h, px.len()), (8, 4, 8 * 4 * 4));
         // Our own image comes back unchanged (no re-import, keeps the original position).
         assert!(!app.import_os_clipboard());
+        // Text copied elsewhere replaces our image: nothing to paste, not the stale image.
+        let ours = os.lock().unwrap().take();
+        assert!(!app.import_os_clipboard());
+        assert!(app.session.clipboard.is_none());
+        *os.lock().unwrap() = ours;
+        app.run("edit.copy", serde_json::json!({})).unwrap();
         // Another app puts a 3×2 red image on the clipboard: ⌘V pastes it.
         *os.lock().unwrap() = Some((3, 2, [255u8, 0, 0, 255].repeat(6)));
         app.run("edit.paste", serde_json::json!({})).unwrap();
         let st = app.session.active().unwrap();
         let surf = st.doc.layer(st.active_layer.unwrap()).unwrap().surface().unwrap();
         assert_eq!(surf.content_bounds().width(), 3);
+    }
+
+    #[test]
+    fn os_clipboard_honours_export_clipboard_preference() {
+        let os: OsClip = Arc::default();
+        let a = os.clone();
+        let services = Services {
+            clipboard_set_image: Some(Box::new(move |w: u32, h: u32, px: &[u8]| {
+                *a.lock().unwrap() = Some((w, h, px.to_vec()));
+                Ok(())
+            })),
+            ..Default::default()
+        };
+        let mut app = PhotocraftApp::new(Session::new(), services);
+        app.session.execute("prefs.set", serde_json::json!({"values": {"general.exportClipboard": false}})).unwrap();
+        app.session.execute("file.new", serde_json::json!({"width": 32, "height": 32})).unwrap();
+        app.sync_views();
+        app.run("select.rect", serde_json::json!({"x": 0, "y": 0, "width": 8, "height": 4})).unwrap();
+        app.run("edit.copy", serde_json::json!({})).unwrap();
+        assert!(os.lock().unwrap().is_none(), "copy does not mirror to OS clipboard when export_clipboard is off");
     }
 
     type OsClip = Arc<Mutex<Option<(u32, u32, Vec<u8>)>>>;

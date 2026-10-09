@@ -8,6 +8,7 @@
 	Layer	Επίπεδο
 	Type	Κείμενο
 	Select	Επιλογή
+	Scope	Εύρος
 	Filter	Φίλτρο
 	View	Προβολή
 	Window	Παράθυρο
@@ -552,6 +553,7 @@
 	Middle	Μέση
 	Position	Θέση
 	Location	Τοποθεσία
+	Location:	Θέση:
 	Offset	Μετατόπιση
 	Distance	Απόσταση
 	Radius	Ακτίνα
@@ -2201,7 +2203,7 @@
 	Dots	Κουκκίδες
 	Down	Κάτω
 	Drag (lasso) or click points (polygonal) · {add} add · {sub} subtract	Σύρετε για λάσο ή κάντε κλικ για πολυγωνική επιλογή · {add} προσθήκη · {sub} αφαίρεση
-	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · {commit} commits · Esc cancels	Σύρετε για περιοχή περικοπής · σύρετε στο εσωτερικό για μετακίνηση · από τα άκρα αλλάζει μέγεθος ({ratio} αναλογία, {centre} κέντρο) · Space για μετακίνηση κατά τη σχεδίαση · {commit} εφαρμογή · Esc ακύρωση
+	Drag a crop box · drag inside to move · edges resize ({ratio} ratio, {centre} centre) · Space moves while drawing · arrows nudge · X swaps orientation · {commit} commits · Esc cancels	Σύρετε για περιοχή περικοπής · σύρετε στο εσωτερικό για μετακίνηση · από τα άκρα αλλάζει μέγεθος ({ratio} αναλογία, {centre} κέντρο) · Space για μετακίνηση κατά τη σχεδίαση · βέλη για μετακίνηση · X εναλλαγή προσανατολισμού · {commit} εφαρμογή · Esc ακύρωση
 	Drag around the centre to rotate the view  ·  Shift constrains to 15°	Σύρετε γύρω από το κέντρο για να περιστρέψετε την προβολή  ·  Shift περιορίζει στις 15°
 	Drag on the image to add a constraint; Shift for horizontal/vertical; right-click to delete.	Σύρετε πάνω στην εικόνα για προσθήκη περιορισμού· Shift για οριζόντιο/κατακόρυφο· δεξί κλικ για διαγραφή.
 	Drag or click polygon points · hold Alt during lasso for straight segments · {add} add · {sub} before drawing subtracts	Σύρετε ή κάντε κλικ για πολυγωνικά σημεία · κρατήστε Alt κατά το λάσο για ευθείες · {add} προσθήκη · {sub} αφαίρεση πριν από τη σχεδίαση
@@ -3363,6 +3365,11 @@ fontWeight	Thin	Πολύ λεπτά
 	Preset Name	Όνομα προεπιλογής
 	No saved presets yet.	Δεν υπάρχουν ακόμη αποθηκευμένες προεπιλογές.
 
+# Painting symmetry presets.
+	Dual Axis	Διπλός άξονας
+	Diagonal	Διαγώνια
+	Transform Symmetry	Μετασχηματισμός συμμετρίας
+
 # Eyedropper Sample Size and Sample (#1649).
 	Point Sample	Σημειακό δείγμα
 	3 by 3 Average	Μέσος όρος 3 × 3
@@ -3382,3 +3389,12 @@ fontWeight	Thin	Πολύ λεπτά
 	Color to Alpha…	Χρώμα σε άλφα…
 	Transparency Threshold	Κατώφλι διαφάνειας
 	Opacity Threshold	Κατώφλι αδιαφάνειας
+	Rule of Thirds	Κανόνας των τρίτων
+	Golden Ratio	Χρυσή τομή
+	Golden Spiral	Χρυσή σπείρα
+	Auto Show Overlay	Αυτόματη εμφάνιση επικάλυψης
+	Always Show Overlay	Πάντα εμφάνιση επικάλυψης
+	Never Show Overlay	Ποτέ εμφάνιση επικάλυψης
+	Cycle Overlay	Εναλλαγή επικάλυψης
+	Cycle Orientation	Εναλλαγή προσανατολισμού
+	Set the overlay options for the Crop tool	Ορισμός επιλογών επικάλυψης για το εργαλείο Περικοπή
