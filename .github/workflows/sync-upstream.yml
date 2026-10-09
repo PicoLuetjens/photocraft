@@ -23,6 +23,12 @@ jobs:
           ref: main
           fetch-depth: 0
 
+      - name: Configure Git
+        run:
+          git config user.name "github-actions[bot]"
+          git config user.email \
+            "41898282+github-actions[bot]@users.noreply.github.com"
+            
       - name: Sync with Upstream
         env:
           UPSTREAM_REPOSITORY: storytold/photocraft
