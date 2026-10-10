@@ -34,7 +34,7 @@ Each reply is one JSON line with the same `id`:
 {"id": 2, "ok": false, "error": "unknown tool `foo`"}
 ```
 
-The desktop server waits up to 60 seconds for a reply. A request still queued at that deadline is rejected before dispatch; a timeout does not cancel work that has already started.
+The desktop server waits up to 60 seconds for a reply. A request still queued at that deadline is rejected before dispatch; a timeout does not cancel work that has already started. The timeout error names the likely causes: the command may still be running, or the request was queued while the window was not drawing frames — on Wayland the frame update (and with it the control drain) only runs on compositor frame callbacks, so a display that is asleep or a fully occluded window makes every request time out while the app itself is healthy.
 
 The transport is `apps/photocraft/src/control_server.rs`, and the handlers are in `crates/ui-egui/src/control.rs`. The MCP server (`photocraft-cli mcp --bridge 127.0.0.1:<port>`, crate `photocraft-automation`) wraps this same protocol. See [MCP bridge](#mcp-bridge) below.
 
@@ -113,6 +113,7 @@ store expose and persist the same setting; scripts keep using canonical command 
 | `actions.play` | `{"action": name or index, "from": step?}`. `from` and `failed.step` are 0-based. Returns `{action, ran, failed?:{step, id, error}}` and still returns ok when a step fails, so a partial run is reported. Leaves one history step per step that ran. Supports nested action calls up to 16 levels, rejecting cycles. While recording, playing another action appends one named `actions.play` step instead of its expanded commands. On an untrusted session each step is authorized the same way as a top-level command |
 | `actions.move` | `{"action": name or index, "step": index?, "to": index}` moves a step within its action, or moves the whole action when `step` is omitted. `to` is the final zero-based index. Pending steps can be reordered while recording; invalid moves leave the list unchanged. |
 | `actions.delete` | `{"action": name or index, "step": index?}`. With a zero-based `step`: `{action, deletedStep, steps}`, also allowed while recording. Without `step`: `{deleted}`, refused while recording |
+| `actions.rename` | `{"action": name or index, "name": str}` → `{action, index}`. Empty, whitespace-only or duplicate names are rejected and keep the old name. Nested `actions.play` steps that call the action by name and its function key follow the new name. In the desktop panel, double-click an action's name to rename it in place (Enter commits, Esc cancels) |
 
 The Actions panel shows replayable steps immediately while recording. Click an individual
 step to select it, then use the trash button to remove that step; selecting the action
